@@ -1,5 +1,0 @@
-- [x] Fix 'id(' to 'if(' in revenueData function
-- [x] Add semicolon after header in error output
-- [x] Change json_decode to json_encode for error output
-- [x] Add $ to for loop variable
-- [x] Change final json_decode to json_encode
