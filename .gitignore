@@ -1,0 +1,48 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# IDE
+/.idea/
+/.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Cache
+/cache/
+/tmp/
+*.cache
+
+# OS
+Thumbs.db
+.DS_Store
+
+# PHP
+*.php~
+*.php.bak
+
+# Database
+*.sql.bak
+*.db
+
+# Uploads (nếu có)
+/public/uploads/
+/storage/uploads/
+
+# Composer
+/vendor/
+composer.lock
+
+# Laragon specific
+/laragon/
