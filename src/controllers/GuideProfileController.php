@@ -430,4 +430,4 @@ class GuideProfileController
         exit;
     }
 //abc4
-
+}
