@@ -5,7 +5,7 @@ class CustomerController
     // Hiển thị danh sách khách hàng
     public function index(): void
     {
-        requireAdmin();
+        requireGuideOrAdmin();
 
         $pdo = getDB();
         if ($pdo === null) {
@@ -15,6 +15,7 @@ class CustomerController
         // Lấy tham số filter
         $status = $_GET['status'] ?? null;
         $search = $_GET['search'] ?? '';
+        $filterGuideId = $_GET['guide_id'] ?? null; // admin có thể filter theo guide
 
         // Xây dựng query
         $where = [];
@@ -32,19 +33,63 @@ class CustomerController
             $params[':search3'] = '%' . $search . '%';
         }
 
-        $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+        // Nếu là guide, chỉ hiển thị khách hàng liên quan đến bookings được gán cho guide đó
+        if (isGuide()) {
+            $currentUser = getCurrentUser();
+            $guideId = $currentUser->id;
 
-        $sql = "
-            SELECT c.*,
-                   (SELECT COUNT(*) FROM bookings WHERE customer_id = c.id) as booking_count
-            FROM customers c
-            {$whereClause}
-            ORDER BY c.created_at DESC
-        ";
+            $where[] = 'b.assigned_guide_id = :assigned_guide_id';
+            $params[':assigned_guide_id'] = $guideId;
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        $customers = $stmt->fetchAll();
+            $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+            $sql = "
+                SELECT c.*, COUNT(b.id) as booking_count
+                FROM customers c
+                JOIN bookings b ON b.customer_id = c.id
+                {$whereClause}
+                GROUP BY c.id
+                ORDER BY c.created_at DESC
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $customers = $stmt->fetchAll();
+        } else {
+            // Admin có thể filter theo guide (hiển thị khách hàng có booking được gán cho guide)
+            if (!empty($filterGuideId)) {
+                $where[] = 'b.assigned_guide_id = :filter_guide_id';
+                $params[':filter_guide_id'] = $filterGuideId;
+                $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+                $sql = "
+                    SELECT c.*, COUNT(b.id) as booking_count
+                    FROM customers c
+                    JOIN bookings b ON b.customer_id = c.id
+                    {$whereClause}
+                    GROUP BY c.id
+                    ORDER BY c.created_at DESC
+                ";
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                $customers = $stmt->fetchAll();
+            } else {
+                $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+                $sql = "
+                    SELECT c.*,
+                           (SELECT COUNT(*) FROM bookings WHERE customer_id = c.id) as booking_count
+                    FROM customers c
+                    {$whereClause}
+                    ORDER BY c.created_at DESC
+                ";
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                $customers = $stmt->fetchAll();
+            }
+        }
 
         ob_start();
         include view_path('admin.customers.index');
