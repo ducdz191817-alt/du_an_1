@@ -77,7 +77,7 @@ class AuthController
             return;
         }
 
-        // Lấy user theo email
+        //  user theo email
         $stmt = $pdo->prepare(
             'SELECT * FROM users WHERE email = :email AND status = 1 LIMIT 1'
         );
@@ -96,16 +96,16 @@ class AuthController
             return;
         }
 
-        // Tạo object User
+        //  object User
         $user = new User([
             'id'     => $userRow['id'],
             'name'   => $userRow['name'],
             'email'  => $userRow['email'],
-            'role'   => $userRow['role'], // admin / guide
+            'role'   => $userRow['role'], 
             'status' => $userRow['status'],
         ]);
 
-        // Cập nhật thời gian đăng nhập cuối
+
         $user->updateLastLogin();
 
         // Lưu session
