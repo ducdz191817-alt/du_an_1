@@ -99,6 +99,10 @@ match ($act) {
     'guide-profile-show' => $guideProfileController->show(),
     'guide-profile-delete' => $guideProfileController->delete(),
 
+    // Trang dành cho hướng dẫn viên
+    'guide-schedule' => $bookingController->guideSchedule(),
+    'guide-history' => $bookingController->guideCustomers(),
+
     // Quản lý Người dùng (Hướng dẫn viên)
     'users' => $userController->index(),
     'user-create' => $userController->create(),

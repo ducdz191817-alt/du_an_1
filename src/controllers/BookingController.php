@@ -136,6 +136,142 @@ class BookingController
         ]);
     }
 
+    // Trang lịch trình cho hướng dẫn viên (xem booking được gán)
+    public function guideSchedule(): void
+    {
+        requireGuideOnly();
+
+        $pdo = getDB();
+        if ($pdo === null) {
+            throw new RuntimeException('Không thể kết nối cơ sở dữ liệu');
+        }
+
+        $currentUser = getCurrentUser();
+        $guideId = $currentUser->id;
+
+        $sql = "
+            SELECT b.*, t.name as tour_name, ts.name as status_name
+            FROM bookings b
+            LEFT JOIN tours t ON t.id = b.tour_id
+            LEFT JOIN tour_statuses ts ON ts.id = b.status
+            WHERE b.assigned_guide_id = :guide_id
+            ORDER BY b.departure_date ASC, b.created_at DESC
+        ";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':guide_id' => $guideId]);
+        $bookings = $stmt->fetchAll();
+
+        // Chuẩn hóa thông tin khách hàng cho mỗi booking
+        foreach ($bookings as &$booking) {
+            if (!empty($booking['service_detail'])) {
+                $service = json_decode($booking['service_detail'], true);
+                if (is_array($service)) {
+                    $booking['customer'] = $service['customer'] ?? null;
+                    $booking['total_guests'] = $service['total_guests'] ?? 0;
+                }
+            }
+
+            if (!empty($booking['customer_id']) && empty($booking['customer'])) {
+                $customerStmt = $pdo->prepare('SELECT * FROM customers WHERE id = ? LIMIT 1');
+                $customerStmt->execute([$booking['customer_id']]);
+                $customer = $customerStmt->fetch();
+                if ($customer) {
+                    $booking['customer'] = [
+                        'name' => $customer['name'],
+                        'phone' => $customer['phone'],
+                        'email' => $customer['email'],
+                        'address' => $customer['address'],
+                    ];
+                }
+            }
+        }
+        unset($booking);
+
+        ob_start();
+        include view_path('guide.schedule');
+        $content = ob_get_clean();
+
+        view('layouts.AdminLayout', [
+            'title' => 'Lịch trình của tôi',
+            'pageTitle' => 'Lịch trình',
+            'content' => $content,
+            'bookings' => $bookings,
+            'breadcrumb' => [
+                ['label' => 'Trang chủ', 'url' => BASE_URL . '?act=home'],
+                ['label' => 'Lịch trình', 'url' => BASE_URL . '?act=guide-schedule', 'active' => true],
+            ],
+        ]);
+    }
+
+    // Danh sách khách hàng liên quan đến các booking được gán cho hướng dẫn viên
+    public function guideCustomers(): void
+    {
+        requireGuideOnly();
+
+        $pdo = getDB();
+        if ($pdo === null) {
+            throw new RuntimeException('Không thể kết nối cơ sở dữ liệu');
+        }
+
+        $currentUser = getCurrentUser();
+        $guideId = $currentUser->id;
+
+        $sql = "SELECT b.* FROM bookings b WHERE b.assigned_guide_id = :guide_id ORDER BY b.created_at DESC";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':guide_id' => $guideId]);
+        $bookings = $stmt->fetchAll();
+
+        // Tập hợp khách hàng duy nhất
+        $customers = [];
+        foreach ($bookings as $b) {
+            $cust = null;
+            if (!empty($b['service_detail'])) {
+                $service = json_decode($b['service_detail'], true);
+                if (is_array($service) && !empty($service['customer'])) {
+                    $cust = $service['customer'];
+                }
+            }
+
+            if (!$cust && !empty($b['customer_id'])) {
+                $customerStmt = $pdo->prepare('SELECT * FROM customers WHERE id = ? LIMIT 1');
+                $customerStmt->execute([$b['customer_id']]);
+                $cRow = $customerStmt->fetch();
+                if ($cRow) {
+                    $cust = [
+                        'id' => $cRow['id'],
+                        'name' => $cRow['name'],
+                        'phone' => $cRow['phone'],
+                        'email' => $cRow['email'],
+                        'address' => $cRow['address'],
+                    ];
+                }
+            }
+
+            if ($cust) {
+                $key = $cust['phone'] ?? ($cust['email'] ?? ($cust['name'] ?? uniqid()));
+                if (!isset($customers[$key])) {
+                    $customers[$key] = $cust;
+                }
+            }
+        }
+
+        ob_start();
+        include view_path('guide.customers');
+        $content = ob_get_clean();
+
+        view('layouts.AdminLayout', [
+            'title' => 'Khách hàng của tôi',
+            'pageTitle' => 'Danh sách Khách hàng',
+            'content' => $content,
+            'customers' => $customers,
+            'breadcrumb' => [
+                ['label' => 'Trang chủ', 'url' => BASE_URL . '?act=home'],
+                ['label' => 'Khách hàng', 'url' => BASE_URL . '?act=guide-history', 'active' => true],
+            ],
+        ]);
+    }
+
     // Hiển thị form tạo booking
     public function create(): void
     {
