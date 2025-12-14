@@ -1,0 +1,132 @@
+<?php
+
+function createPasswordHash($password)
+{
+    return password_hash($password, PASSWORD_BCRYPT);
+}
+
+
+class AuthController
+{
+    // Hiển thị form đăng nhập
+    public function login()
+    {
+        if (isLoggedIn()) {
+            $user = getCurrentUser();
+            // Redirect theo role
+            if ($user && $user->isAdmin()) {
+                header('Location: ' . BASE_URL . '?act=dashboard');
+            } elseif ($user && $user->isGuide()) {
+                header('Location: ' . BASE_URL . '?act=guide-schedule');
+            } else {
+            header('Location: ' . BASE_URL . 'home');
+            }
+            exit;   
+        }
+
+        $redirect = $_GET['redirect'] ?? BASE_URL . 'home';
+
+        view('auth.login', [
+            'title'    => 'Đăng nhập',
+            'redirect' => $redirect,
+        ]);
+    }
+
+    // Xử lý đăng nhập
+    public function checkLogin()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . 'login');
+            exit;
+        }
+
+        $email    = $_POST['email'] ?? '';
+        $password = $_POST['password'] ?? '';
+        $redirect = $_POST['redirect'] ?? BASE_URL . 'home';
+
+        $errors = [];
+
+        if (empty($email)) {
+            $errors[] = 'Vui lòng nhập email';
+        }
+
+        if (empty($password)) {
+            $errors[] = 'Vui lòng nhập mật khẩu';
+        }
+
+        if (!empty($errors)) {
+            view('auth.login', [
+                'title'    => 'Đăng nhập',
+                'errors'   => $errors,
+                'email'    => $email,
+                'redirect' => $redirect,
+            ]);
+            return;
+        }
+
+        // Kết nối DB
+        $pdo = getDB();
+        if ($pdo === null) {
+            $errors[] = 'Không thể kết nối cơ sở dữ liệu.';
+            view('auth.login', [
+                'title'    => 'Đăng nhập',
+                'errors'   => $errors,
+                'email'    => $email,
+                'redirect' => $redirect,
+            ]);
+            return;
+        }
+
+        //  user theo email
+        $stmt = $pdo->prepare(
+            'SELECT * FROM users WHERE email = :email AND status = 1 LIMIT 1'
+        );
+        $stmt->execute([':email' => $email]);
+        $userRow = $stmt->fetch();
+
+        // Kiểm tra user + mật khẩu
+        if (!$userRow || !password_verify($password, $userRow['password'])) {
+            $errors[] = 'Email hoặc mật khẩu không chính xác.';
+            view('auth.login', [
+                'title'    => 'Đăng nhập',
+                'errors'   => $errors,
+                'email'    => $email,
+                'redirect' => $redirect,
+            ]);
+            return;
+        }
+
+        //  object User
+        $user = new User([
+            'id'     => $userRow['id'],
+            'name'   => $userRow['name'],
+            'email'  => $userRow['email'],
+            'role'   => $userRow['role'], 
+            'status' => $userRow['status'],
+        ]);
+
+
+        $user->updateLastLogin();
+
+        // Lưu session
+        loginUser($user);
+
+        // Redirect theo role
+        if ($user->isAdmin()) {
+            header('Location: ' . BASE_URL . '?act=dashboard');
+        } elseif ($user->isGuide()) {
+            header('Location: ' . BASE_URL . '?act=guide-schedule');
+        } else {
+            header('Location: ' . BASE_URL . 'home');
+        }
+        exit;
+    }
+
+    // Đăng xuất
+    public function logout()
+    {
+        logoutUser();
+        header('Location: ' . BASE_URL . 'welcome');
+        exit;
+    }
+}
