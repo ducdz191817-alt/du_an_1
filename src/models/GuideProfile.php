@@ -1,9 +1,7 @@
 <?php
 
-// Model GuideProfile đại diện cho thực thể hồ sơ hướng dẫn viên trong hệ thống
 class GuideProfile
 {
-    // Các thuộc tính của GuideProfile
     public $id;
     public $user_id;
     public $birthdate;

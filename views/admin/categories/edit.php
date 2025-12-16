@@ -69,7 +69,7 @@ if (!$category) {
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="parent_id" class="form-label">Danh mục cha</label>
+                        <label for="parent_id" class="form-label">Loại Tour</label>
                         <select class="form-select" id="parent_id" name="parent_id">
                             <option value="">-- Không có (Danh mục gốc) --</option>
                             <?php foreach ($parentCategories as $parent): ?>

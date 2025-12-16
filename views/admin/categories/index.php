@@ -71,13 +71,13 @@ function formatDate($date) {
             <table class="table table-bordered table-striped table-hover">
                 <thead>
                     <tr>
-                        <th width="50">ID</th>
-                        <th>Tên Danh mục</th>
-                        <th>Slug</th>
-                        <th>Danh mục cha</th>
-                        <th width="80">Thứ tự</th>
+                        <th width="50">Mã Tour</th>
+                        <th>Tên Tour</th>
+                        <th>Địa điểm</th>
+                        <th>Loại Tour</th>
+                        <th width="80">Thứ tự khởi hành</th>
                         <th width="100">Số Tour</th>
-                        <th width="100">Danh mục con</th>
+
                         <th width="100">Trạng thái</th>
                         <th width="150">Thao tác</th>
                     </tr>
@@ -113,13 +113,7 @@ function formatDate($date) {
                                 <td class="text-center">
                                     <span class="badge bg-primary"><?= $category['tour_count'] ?></span>
                                 </td>
-                                <td class="text-center">
-                                    <?php if ($category['children_count'] > 0): ?>
-                                        <span class="badge bg-success"><?= $category['children_count'] ?></span>
-                                    <?php else: ?>
-                                        <span class="text-muted">-</span>
-                                    <?php endif; ?>
-                                </td>
+                                
                                 <td>
                                     <?php if ($category['status'] == 1): ?>
                                         <span class="badge bg-success">Hoạt động</span>

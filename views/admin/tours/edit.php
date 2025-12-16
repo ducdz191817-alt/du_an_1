@@ -124,17 +124,7 @@ $suppliers = (string)($suppliers ?? '');
                            value="<?= htmlspecialchars($price ?? '') ?>" min="0" step="1000" required>
                 </div>
 
-                <div class="col-md-6 mb-3">
-                    <label for="adult_price" class="form-label">Giá người lớn (VNĐ)</label>
-                    <input type="number" class="form-control" id="adult_price" name="adult_price" 
-                           value="<?= htmlspecialchars($adultPrice ?? '') ?>" min="0" step="1000">
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label for="child_price" class="form-label">Giá trẻ em (VNĐ)</label>
-                    <input type="number" class="form-control" id="child_price" name="child_price" 
-                           value="<?= htmlspecialchars($childPrice ?? '') ?>" min="0" step="1000">
-                </div>
+                
 
                 <div class="col-md-4 mb-3">
                     <label for="duration" class="form-label">Thời lượng</label>
@@ -170,17 +160,6 @@ $suppliers = (string)($suppliers ?? '');
                 <textarea class="form-control" id="images" name="images" rows="3"><?= htmlspecialchars($images ?? '') ?></textarea>
                 <small class="text-muted">Nhập tên file ảnh, mỗi ảnh một dòng hoặc cách nhau bằng dấu phẩy</small>
             </div>
-
-            <div class="mb-3">
-                <label for="policies" class="form-label">Chính sách</label>
-                <textarea class="form-control" id="policies" name="policies" rows="3"><?= htmlspecialchars($policies ?? '') ?></textarea>
-            </div>
-
-            <div class="mb-3">
-                <label for="suppliers" class="form-label">Nhà cung cấp (mỗi nhà cung cấp một dòng hoặc cách nhau bằng dấu phẩy)</label>
-                <textarea class="form-control" id="suppliers" name="suppliers" rows="2"><?= htmlspecialchars($suppliers ?? '') ?></textarea>
-            </div>
-
             <div class="mb-3">
                 <label for="schedule" class="form-label">Lịch trình (JSON)</label>
                 <textarea class="form-control" id="schedule" name="schedule" rows="5"><?= htmlspecialchars($schedule ?? '') ?></textarea>
