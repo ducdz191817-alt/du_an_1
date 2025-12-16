@@ -63,8 +63,7 @@ class BookingController
         $bookings = $stmt->fetchAll();
 
         // Xử lý service_detail để lấy thông tin khách hàng và số khách
-        // Lưu ý: total_amount, paid_amount, remaining_amount đã có sẵn trong bookings
-        foreach ($bookings as &$booking) {
+            foreach ($bookings as &$booking) {
             // Ưu tiên sử dụng total_amount từ database
             if (empty($booking['total_amount']) && !empty($booking['service_detail'])) {
                 $service = json_decode($booking['service_detail'], true);
